@@ -48,14 +48,15 @@ let faceApiModelsLoaded = false;
 // Load face-api.js models
 async function loadFaceDetectionModels() {
     try {
-        // Skip loading face detection models since camera is not working
-        console.log('Camera not working, skipping face detection model loading');
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/static/models');
+        await faceapi.nets.faceLandmark68Net.loadFromUri('/static/models');
         faceApiModelsLoaded = true;
         loadingDiv.style.display = 'none';
         startButton.disabled = false;
+        console.log('Face detection models loaded');
     } catch (error) {
-        console.error('Error:', error);
-        loadingDiv.innerHTML = 'Error loading game. Please refresh the page.';
+        console.error('Error loading face detection models:', error);
+        loadingDiv.innerHTML = 'Error loading face detection models. Please refresh the page.';
     }
 }
 
@@ -75,24 +76,13 @@ async function startWebcam() {
         startFaceDetection();
     } catch (error) {
         console.error('Error accessing webcam:', error);
-        loadingDiv.innerHTML = 'Webcam not available. Using keyboard controls only (SPACE to jump).';
-        // Set webcam container to display none
-        document.getElementById('webcam-container').style.display = 'none';
-        // Continue with the game without webcam
-        faceApiModelsLoaded = true;
-        startButton.disabled = false;
+        loadingDiv.innerHTML = 'Error accessing webcam. Please ensure you have a webcam connected and have granted permission.';
     }
 }
 
 // Face detection loop
 async function startFaceDetection() {
     if (!faceApiModelsLoaded) return;
-    
-    // If webcam is not available, skip face detection
-    if (!faceDetectionReady) {
-        console.log('Webcam not available, skipping face detection');
-        return;
-    }
     
     setInterval(async () => {
         if (!faceDetectionReady || !video.readyState === 4) return;
@@ -154,13 +144,28 @@ function drawFace(x, y) {
     ctx.arc(x + 10, y - 8, 7, 0, Math.PI * 2);
     ctx.fill();
     
-    // Draw mouth (always closed since no webcam)
-    ctx.strokeStyle = BLACK;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x - 10, y + 10);
-    ctx.lineTo(x + 10, y + 10);
-    ctx.stroke();
+    // Draw mouth based on webcam
+    if (mouthOpen) {
+        // Open mouth
+        ctx.fillStyle = BLACK;
+        ctx.beginPath();
+        ctx.ellipse(x, y + 10, 15, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner mouth
+        ctx.fillStyle = RED;
+        ctx.beginPath();
+        ctx.ellipse(x, y + 10, 10, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Closed mouth
+        ctx.strokeStyle = BLACK;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x - 10, y + 10);
+        ctx.lineTo(x + 10, y + 10);
+        ctx.stroke();
+    }
 }
 
 function drawPipes() {
@@ -252,12 +257,18 @@ function gameLoop() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     if (gameActive) {
+        // Check for mouth open to make the face jump
+        const currentTime = Date.now();
+        if (mouthOpen && currentTime - lastJumpTime > jumpCooldown) {
+            faceVelocity = -10;
+            lastJumpTime = currentTime;
+        }
+        
         // Apply gravity
         faceVelocity += gravity;
         faceY += faceVelocity;
         
         // Generate pipes
-        const currentTime = Date.now();
         if (currentTime - lastPipeTime > pipeFrequency) {
             createPipe();
             lastPipeTime = currentTime;
