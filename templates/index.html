@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Face - Python Web Version</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="webcam-container">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="overlay"></canvas>
+        </div>
+        <div id="instructions" class="instructions">
+            <h1>Flappy Face - Python Web Version</h1>
+            <p>Open your mouth to make the face jump!</p>
+            <p>Or press SPACE / tap screen to jump</p>
+            <button id="startButton">Start Game</button>
+            <div id="loading">
+                <p>Loading face detection models...</p>
+                <div class="loader"></div>
+            </div>
+        </div>
+        <div id="gameOver" class="game-over hidden">
+            <h1>Game Over!</h1>
+            <p>Your Score: <span id="finalScore">0</span></p>
+            <button id="restartButton">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Face API library -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
