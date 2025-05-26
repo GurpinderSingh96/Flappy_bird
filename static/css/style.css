@@ -29,14 +29,7 @@ body {
 }
 
 #webcam-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 160px;
-    height: 120px;
-    z-index: 2;
-    border: 2px solid white;
-    overflow: hidden;
+    display: none; /* Hide webcam container since camera is not working */
 }
 
 #webcam, #overlay {
